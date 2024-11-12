@@ -1,6 +1,12 @@
 import requests
+from tokens import jules_token
+
 headers = {
     'Content-Type': 'application/json'
 }
-requestResponse = requests.get("https://api.tiingo.com/tiingo/corporate-actions/splits?exDate=2023-9-28&token=276bb16b9cda9fb2da63e8de01d1d46de70364e4", headers=headers)
+
+# Utilisation d'une f-string pour insérer jules_token dans l'URL
+url = f"https://api.tiingo.com/tiingo/corporate-actions/splits?exDate=2023-9-28&token={jules_token}"
+
+requestResponse = requests.get(url, headers=headers)
 print(requestResponse.json())
