@@ -79,3 +79,5 @@ except FileNotFoundError:
     st.error(f"Modèle pour {selected_ticker} non trouvé. Entraînez-le d'abord.")
 except Exception as e:
     st.error(f"Erreur : {e}")
+
+
