@@ -1,4 +1,6 @@
 all_stock_data.csv
 *.log
+*.csv
+*.zip
 dossier_temp/
-
+*.parquet
