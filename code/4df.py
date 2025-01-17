@@ -1,7 +1,8 @@
 import pandas as pd
 
 # Charger le fichier CSV
-csv_path = "./data/extracted/all_stock_data.csv"  # Chemin du fichier CSV
+# csv_path = "./data/extracted/all_stock_data.csv"  # Chemin du fichier CSV
+csv_path = "../data/all_stock_data.csv"  # Chemin du fichier CSV
 df = pd.read_csv(csv_path)
 
 # Normaliser les noms de colonnes
@@ -39,9 +40,9 @@ else:
 
 # --- Exporter ou traiter les DataFrames ---
 # Optionnel : Sauvegarder chaque DataFrame en CSV
-df_magnificent_seven.to_csv("magnificent_seven.csv", index=False)
-df_top_5_france.to_csv("top_5_france.csv", index=False)
+df_magnificent_seven.to_csv("../data/magnificent_seven.csv", index=False)
+df_top_5_france.to_csv("../data/top_5_france.csv", index=False)
 
-df_ipo_2024.to_csv("ipo_2024.csv", index=False)
+df_ipo_2024.to_csv("../data/ipo_2024.csv", index=False)
 
 print("\nTous les DataFrames ont été créés et exportés.")
