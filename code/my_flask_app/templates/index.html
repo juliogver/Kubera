@@ -32,8 +32,6 @@
         <button type="submit">Afficher les Graphiques</button>
     </form>
 
-
-
     {% if real_price_img_path and predicted_price_img_path %}
         <div style="display: flex; justify-content: space-around; margin-top: 20px;">
             <div>
@@ -43,6 +41,15 @@
             <div>
                 <h2>Prédiction des Prix de Clôture</h2>
                 <img src="{{ url_for('static', filename='predicted_price_plot.png') }}" alt="Prix Prévus">
+            </div>
+        </div>
+    {% endif %}
+
+    {% if predicted_dividend_img_path %}
+        <div style="display: flex; justify-content: center; margin-top: 20px;">
+            <div>
+                <h2>Prédiction des Dividendes</h2>
+                <img src="{{ url_for('static', filename='predicted_dividend_plot.png') }}" alt="Dividendes Prévus">
             </div>
         </div>
     {% endif %}
