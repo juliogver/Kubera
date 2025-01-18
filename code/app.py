@@ -2,8 +2,8 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from prediction_model import load_model, predict_closing_prices
-from data_preparation import prepare_data
+from Kubera.code.my_flask_app.prediction_model import load_model, predict_closing_prices
+from Kubera.code.my_flask_app.data_preparation import prepare_data
 
 # Charger les données
 csv_path = "../data/magnificent_seven.csv"

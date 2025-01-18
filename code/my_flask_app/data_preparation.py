@@ -25,3 +25,4 @@ def prepare_data(csv_path):
         data[ticker] = ticker_df
     
     return data
+

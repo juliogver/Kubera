@@ -6,3 +6,4 @@ scikit-learn
 streamlit
 xgboost  
 statsmodels
+flask

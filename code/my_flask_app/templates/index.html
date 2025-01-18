@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prédictions des Prix de Clôture</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <h1>Prédiction des Prix de Clôture des Actions</h1>
+
+    <form method="POST" action="/">
+        <label for="ticker">Sélectionnez un ticker :</label>
+        <select name="ticker" id="ticker">
+            {% for ticker in tickers %}
+            <option value="{{ ticker }}" {% if ticker == selected_ticker %}selected{% endif %}>
+                {{ ticker }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="timeframe">Sélectionnez une période :</label>
+        <select name="timeframe" id="timeframe">
+            <option value="1D" {% if timeframe == "1D" %}selected{% endif %}>1 Jour</option>
+            <option value="1W" {% if timeframe == "1W" %}selected{% endif %}>1 Semaine</option>
+            <option value="1M" {% if timeframe == "1M" %}selected{% endif %}>1 Mois</option>
+            <option value="1Y" {% if timeframe == "1Y" %}selected{% endif %}>1 An</option>
+            <option value="max" {% if timeframe == "max" %}selected{% endif %}>Max</option>
+        </select>
+
+        <button type="submit">Afficher les Graphiques</button>
+    </form>
+
+
+
+    {% if real_price_img_path and predicted_price_img_path %}
+        <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+            <div>
+                <h2>Prix de Clôture Réels</h2>
+                <img src="{{ url_for('static', filename='real_price_plot.png') }}" alt="Prix Réels">
+            </div>
+            <div>
+                <h2>Prédiction des Prix de Clôture</h2>
+                <img src="{{ url_for('static', filename='predicted_price_plot.png') }}" alt="Prix Prévus">
+            </div>
+        </div>
+    {% endif %}
+
+    {% if error_message %}
+        <div style="color: red; text-align: center;">
+            <p>{{ error_message }}</p>
+        </div>
+    {% endif %}
+
+</body>
+</html>
