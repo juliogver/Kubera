@@ -58,6 +58,19 @@ def home():
             # Filtrer les données pour la période choisie
             df_filtered = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
 
+            '''# Vérification : Si aucune donnée n'est disponible, avertir l'utilisateur
+            if df_filtered.empty:
+                error_message = f"Aucune donnée disponible pour {selected_ticker} sur la période sélectionnée."
+                print(f"Pas de données pour la période demandée: {error_message}")
+                return render_template("index.html", tickers=tickers, error_message=error_message, selected_ticker=selected_ticker)
+
+            # Sauvegarder les données filtrées dans un CSV pour diagnostic
+            output_csv_path = f"static/{selected_ticker}_filtered_data_{timeframe}.csv"
+            df_filtered.to_csv(output_csv_path, index=False)
+            print(f"Données filtrées sauvegardées dans : {output_csv_path}")'''
+
+            # Vous pouvez ensuite visualiser ce fichier CSV dans un tableur ou l'ouvrir pour vérifier les données
+
             # Vérification : Si aucune donnée n'est disponible, avertir l'utilisateur
             if df_filtered.empty:
                 error_message = f"Aucune donnée disponible pour {selected_ticker} sur la période sélectionnée."
