@@ -1,40 +1,71 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background-color: #f8f9fa;
     margin: 0;
     padding: 0;
+    line-height: 1.6;
 }
 
 h1 {
     text-align: center;
     color: #333;
+    margin-top: 20px;
+    font-size: 2rem;
 }
 
 form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 600px;
+    margin: 20px auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     text-align: center;
-    margin-top: 20px;
 }
 
-form select {
-    padding: 5px;
+form select, form button {
+    margin: 10px 0;
+    padding: 10px;
     font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    outline: none;
+    width: 100%;
+    max-width: 300px;
 }
 
 form button {
-    padding: 10px 20px;
-    background-color: #007BFF;
+    background-color: #007bff;
     color: white;
     border: none;
-    font-size: 16px;
     cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 form button:hover {
     background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.container .chart {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 45%;
+    max-width: 500px;
 }
 
 img {
-    display: block;
-    margin: 0 auto;
-    max-width: 80%;
+    width: 100%;
+    border-radius: 10px;
+    margin: 10px 0;
 }
