@@ -42,9 +42,12 @@ def home():
 
     real_price_top5_img_path = None
     predicted_dividend_top5_img_path = None
+
+    user_investment = None
+    dividend_yield = None
+    user_investment_top5fr = None
+    dividend_yield_top5fr = None
   
-
-
     def get_filtered_data(data, timeframe):
         # Utiliser la dernière date disponible dans les données comme référence
         if data['date'].max() is pd.NaT:
@@ -73,6 +76,7 @@ def home():
     if request.method == "POST" and request.form.get("ticker"):
         selected_ticker = request.form.get("ticker")
         timeframe = request.form.get("timeframe")
+        user_investment = request.form.get("investment")
 
         
 
@@ -80,6 +84,19 @@ def home():
             df = magnificent_data[magnificent_data['ticker'] == selected_ticker].copy()
             df_filtered = get_filtered_data(df, timeframe)
             dividends = dividend_data[dividend_data['ticker'] == selected_ticker].copy()
+
+            if not dividends.empty and not df.empty:
+                    df = df.dropna(subset=['close'])
+                    dividends = dividends.dropna(subset=['dividends'])
+                    merged_data = pd.merge(dividends, df, on=['date', 'ticker'], how='inner')
+
+                    if not merged_data.empty:
+                        merged_data['dividend_to_price_ratio'] = merged_data['dividends'] / merged_data['close']
+                        avg_ratio = merged_data['dividend_to_price_ratio'].mean()
+
+                        if user_investment and avg_ratio:
+                            user_investment = float(user_investment)
+                            dividend_yield = user_investment * avg_ratio
 
             if dividends.empty:
                 return render_template(
@@ -153,6 +170,8 @@ def home():
             predicted_dividend_img_path = "static/predicted_dividend_plot.png"
             fig.savefig(predicted_dividend_img_path)
 
+            
+
 
         except Exception as e:
             return render_template(
@@ -170,11 +189,25 @@ def home():
             
         selected_top5_ticker = request.form.get("ticker_top5")
         timeframe = request.form.get("timeframe")
+        user_investment_top5fr = request.form.get("investment")
 
         try:
             df = top_5_fr_data[top_5_fr_data['ticker'] == selected_top5_ticker].copy()
             df_filtered = get_filtered_data(df, timeframe)
             dividends = dividend_top5[dividend_top5['ticker'] == selected_top5_ticker].copy()
+
+            if not dividends.empty and not df.empty:
+                    df = df.dropna(subset=['close'])
+                    dividends = dividends.dropna(subset=['dividends'])
+                    merged_data = pd.merge(dividends, df, on=['date', 'ticker'], how='inner')
+
+                    if not merged_data.empty:
+                        merged_data['dividend_to_price_ratio'] = merged_data['dividends'] / merged_data['close']
+                        avg_ratio = merged_data['dividend_to_price_ratio'].mean()
+
+                        if user_investment_top5fr and avg_ratio:
+                            user_investment_top5fr = float(user_investment_top5fr)
+                            dividend_yield_top5fr = user_investment_top5fr * avg_ratio
 
             if dividends.empty:
                 return render_template(
@@ -182,7 +215,7 @@ def home():
                     top_5_fr_tickers=top_5_fr_tickers,
                     #top_5_fr_tickers=top_5_fr_tickers,
                     #top_5_closing_img_paths=top_5_closing_img_paths,
-                    error_message=f"Le ticker {selected_top5_ticker} ne verse pas de dividendes.",
+                    error_message_fr=f"Le ticker {selected_top5_ticker} ne verse pas de dividendes.",
                     selected_top5_ticker=selected_top5_ticker,
                     timeframe=timeframe,
                 )
@@ -197,7 +230,7 @@ def home():
                     top_5_fr_tickers=top_5_fr_tickers,
                     #top_5_fr_tickers=top_5_fr_tickers,
                     #top_5_closing_img_paths=top_5_closing_img_paths,
-                    error_message=f"Aucune donnée commune disponible pour {selected_top5_ticker}.",
+                    error_message_fr=f"Aucune donnée commune disponible pour {selected_top5_ticker}.",
                     selected_top5_ticker=selected_top5_ticker,
                     timeframe=timeframe,
                 )
@@ -253,7 +286,7 @@ def home():
             return render_template(
                 "index.html",
                 top_5_fr_tickers=top_5_fr_tickers,
-                error_message=f"Une erreur est survenue : {str(e)}",
+                error_message_fr=f"Une erreur est survenue : {str(e)}",
                 selected_top5_ticker=selected_top5_ticker,
                 timeframe=timeframe,
             )
@@ -270,6 +303,10 @@ def home():
         predicted_dividend_img_path=predicted_dividend_img_path,
         real_price_top5_img_path=real_price_top5_img_path,
         predicted_dividend_top5_img_path=predicted_dividend_top5_img_path,
+        dividend_yield=dividend_yield,
+        dividend_yield_top5fr=dividend_yield_top5fr,
+        user_investment_top5fr=user_investment_top5fr,
+        user_investment=user_investment
     )
 
 if __name__ == "__main__":

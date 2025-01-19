@@ -45,10 +45,23 @@
                 </select>
             </div>
 
+            <form method="POST" action="/" class="bg-white p-4 shadow rounded">
+                <div class="input-group mb-3">
+                    <input type="number" step="0.01" name="investment" id="investment" class="form-control" placeholder="Montant en euros" value="{{ user_investment }}">
+                    <button type="submit" name="action" value="calculate_investment" class="btn btn-success">Calculer</button>
+                </div>
+            </form>
+
+
+
             <button type="submit" class="btn btn-primary w-100">Afficher les Graphiques</button>
+
+            {% if error_message %}
+            <div class="alert alert-danger mt-4 text-center">
+                <p>{{ error_message }}</p>
+            </div>
+            {% endif %}
         </form>
-
-
         
 
         {% if real_price_img_path or predicted_dividend_img_path %}
@@ -63,6 +76,19 @@
             </div>
         </div>
         {% endif %}
+
+         <!-- Section pour afficher le rendement calculé -->
+        {% if dividend_yield %}
+        <div class="alert alert-success mt-4">
+            <h4 class="text-center">Rendement Calculé</h4>
+            <p class="text-center">
+                Pour un investissement de <strong>{{ user_investment }} €</strong>, votre dividende estimé sera de 
+                <strong>{{ dividend_yield | round(2) }} €</strong>.
+            </p>
+        </div>
+        {% endif %}
+
+
 
         <!-- Ajout des graphiques pour les 5 plus grandes entreprises françaises -->
         <h2 class="text-center mt-5">Top 5 Entreprises Françaises</h2>
@@ -89,7 +115,22 @@
                 </select>
             </div>
 
+            <form method="POST" action="/" class="bg-white p-4 shadow rounded">
+                <div class="input-group mb-3">
+                    <input type="number" step="0.01" name="investment" id="investment" class="form-control" placeholder="Montant en euros" value="{{ user_investment }}">
+                    <button type="submit" name="action" value="calculate_investment" class="btn btn-success">Calculer</button>
+                </div>
+            </form>
+
+
+
             <button type="submit" class="btn btn-warning w-100">Afficher les Graphiques</button>
+
+            {% if error_message_fr %}
+            <div class="alert alert-danger mt-4 text-center">
+                <p>{{ error_message_fr }}</p>
+            </div>
+            {% endif %}
         </form>
 
 
@@ -106,12 +147,44 @@
         </div>
         {% endif %}
 
-        {% if error_message %}
-        <div class="alert alert-danger mt-4 text-center">
-            <p>{{ error_message }}</p>
+         <!-- Section pour afficher le rendement calculé -->
+        {% if dividend_yield_top5fr %}
+        <div class="alert alert-success mt-4">
+            <h4 class="text-center">Rendement Calculé</h4>
+            <p class="text-center">
+                Pour un investissement de <strong>{{ user_investment_top5fr }} €</strong>, votre dividende estimé sera de 
+                <strong>{{ dividend_yield_top5fr | round(2) }} €</strong>.
+            </p>
         </div>
         {% endif %}
+
+
+      
+
     </div>
+
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light mt-5 py-4">
+        <div class="container">
+            <h5 class="text-center">À propos de nous</h5>
+            <p class="text-center mt-3">
+                Kubera a été créée pour guider les nouveaux investisseurs dans leurs décisions financières. 
+                Notre équipe est composée de passionnés et experts en finance et technologie :
+            </p>
+            <ul class="list-unstyled text-center">
+                <li>Jules Gravier - CEO</li>
+                <li>Anna Meliz – Data Analyst</li>
+                <li>Arthur Gagniaire - Architecte base de données</li>
+                <li>Enzo Cuoc – Data Analyst</li>
+                <li>Julien de la Harpe - Développeur</li>
+            </ul>
+            <p class="text-center mt-3">
+                Ensemble, nous œuvrons pour démocratiser l'accès à des analyses financières de qualité.
+            </p>
+        </div>
+    </footer>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
