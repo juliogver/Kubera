@@ -31,6 +31,7 @@ def home():
     tickers = magnificent_data['ticker'].unique()
     top_5_fr_tickers = top_5_fr_data['ticker'].unique()
     selected_ticker = None
+    selected_top5_ticker = None
     timeframe = "max"
 
     real_price_img_path = None
@@ -50,6 +51,7 @@ def home():
                 return render_template(
                     "index.html",
                     tickers=tickers,
+                    top_5_fr_tickers=top_5_fr_tickers,
                     top_5_closing_img_paths=top_5_closing_img_paths,
                     error_message=f"Le ticker {selected_ticker} ne verse pas de dividendes.",
                     selected_ticker=selected_ticker,
@@ -64,6 +66,7 @@ def home():
                 return render_template(
                     "index.html",
                     tickers=tickers,
+                    top_5_fr_tickers=top_5_fr_tickers,
                     top_5_closing_img_paths=top_5_closing_img_paths,
                     error_message=f"Aucune donnée commune disponible pour {selected_ticker}.",
                     selected_ticker=selected_ticker,
@@ -116,34 +119,41 @@ def home():
             predicted_dividend_img_path = "static/predicted_dividend_plot.png"
             fig.savefig(predicted_dividend_img_path)
 
-            
+
         except Exception as e:
             return render_template(
                 "index.html",
                 tickers=tickers,
+                top_5_fr_tickers=top_5_fr_tickers,
                 top_5_closing_img_paths=top_5_closing_img_paths,
                 error_message=f"Une erreur est survenue : {str(e)}",
                 selected_ticker=selected_ticker,
                 timeframe=timeframe,
             )
 
-    '''# Traitement pour le Top 5 Français
-    for ticker in top_5_fr_tickers:
-        df_top_5 = top_5_fr_data[top_5_fr_data['ticker'] == ticker]
+     # Gestion de la sélection des tickers pour le Top 5 Français
+    if request.method == "POST" and "ticker_top5" in request.form:
+        selected_top5_ticker = request.form.get("ticker_top5")
+        df_top5 = top_5_fr_data[top_5_fr_data['ticker'] == selected_top5_ticker]
+
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.plot(df_top_5['date'], df_top_5['close'], label=f"Prix de Clôture - {ticker}", color="blue")
-        ax.set_title(f"Prix de Clôture - {ticker}")
+        ax.plot(df_top5['date'], df_top5['close'], label=f"Prix de Clôture - {selected_top5_ticker}", color="blue")
+        ax.set_title(f"Prix de Clôture - {selected_top5_ticker}")
         ax.set_xlabel("Date")
         ax.set_ylabel("Prix de Clôture")
         ax.legend()
         ax.grid(True)
-        img_path = f"static/real_price_top5_{ticker.lower()}_plot.png"
+        img_path = f"static/real_price_top5_{selected_top5_ticker.lower()}.png"
         fig.savefig(img_path)
-        top_5_closing_img_paths.append(img_path)'''
+        top_5_closing_img_paths.append(img_path)
 
     return render_template(
         "index.html",
         tickers=tickers,
+        top_5_fr_tickers=top_5_fr_tickers,
+        selected_ticker=selected_ticker,
+        selected_top5_ticker=selected_top5_ticker,
+        timeframe=timeframe,
         real_price_img_path=real_price_img_path,
         predicted_dividend_img_path=predicted_dividend_img_path,
         top_5_closing_img_paths=top_5_closing_img_paths
@@ -151,3 +161,4 @@ def home():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
