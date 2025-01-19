@@ -38,6 +38,21 @@ def home():
     predicted_dividend_img_path = None
     top_5_closing_img_paths = []
 
+
+    def get_filtered_data(data, timeframe):
+        today = pd.Timestamp.today()
+        if timeframe == "1D":
+            start_date = today - pd.Timedelta(days=1)
+        elif timeframe == "1W":
+            start_date = today - pd.Timedelta(weeks=1)
+        elif timeframe == "1M":
+            start_date = today - pd.DateOffset(months=1)
+        elif timeframe == "1Y":
+            start_date = today - pd.DateOffset(years=1)
+        else:  # "max"
+            return data
+        return data[data['date'] >= start_date]
+
     # Traitement pour le Magnificent Seven
     if request.method == "POST" and request.form.get("ticker"):
         selected_ticker = request.form.get("ticker")
@@ -45,6 +60,7 @@ def home():
 
         try:
             df = magnificent_data[magnificent_data['ticker'] == selected_ticker].copy()
+            df_filtered = get_filtered_data(df, timeframe)
             dividends = dividend_data[dividend_data['ticker'] == selected_ticker].copy()
 
             if dividends.empty:
@@ -77,7 +93,7 @@ def home():
             avg_ratio = merged_data['dividend_to_price_ratio'].mean()
 
             fig_closing, ax_closing = plt.subplots(figsize=(10, 6))
-            ax_closing.plot(df['date'], df['close'], label="Prix de Clôture Historiques", color="green")
+            ax_closing.plot(df_filtered['date'], df_filtered['close'], label="Prix de Clôture Historiques", color="green")
             ax_closing.set_title(f"Prix de Clôture Historiques - {selected_ticker}")
             ax_closing.set_xlabel("Date")
             ax_closing.set_ylabel("Prix de Clôture")
