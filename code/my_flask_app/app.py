@@ -4,9 +4,13 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 import numpy as np
+import requests
 from datetime import datetime
 
 app = Flask(__name__)
+
+# Clé API pour NewsAPI
+NEWS_API_KEY = "57d058c57a1c4ed3aa11d34b0bde1638"
 
 # Charger les données
 magnificent_csv_path = "../../data/magnificent_seven.csv"
@@ -14,10 +18,15 @@ dividend_data_path = "../../data/magnificent_seven_dividends.csv"
 top_5_fr_csv_path = "../../data/top_5_fr.csv"
 dividend_top_5fr_path = "../../data/french_top5_dividends.csv"
 
+all_stock_data_path = "../../data/all_stock_data.csv"  # Assurez-vous que ce fichier est au bon endroit
+
+
 magnificent_data = pd.read_csv(magnificent_csv_path)
 dividend_data = pd.read_csv(dividend_data_path)
 top_5_fr_data = pd.read_csv(top_5_fr_csv_path)
 dividend_top5 = pd.read_csv(dividend_top_5fr_path)
+
+all_stock_data = pd.read_csv(all_stock_data_path)
 
 # Convertir les dates
 magnificent_data['date'] = pd.to_datetime(magnificent_data['date'], errors='coerce')
@@ -29,6 +38,25 @@ dividend_top5['date'] = pd.to_datetime(dividend_top5['date'], errors='coerce')
 magnificent_data = magnificent_data[['date', 'ticker', 'close']]
 top_5_fr_data = top_5_fr_data[['date', 'ticker', 'close']]
 
+
+# Fonction pour récupérer les actualités via NewsAPI
+def fetch_news(ticker, api_key):
+    url = "https://newsapi.org/v2/everything"
+    params = {
+        "q": ticker,
+        "apiKey": api_key,
+        "language": "en",
+        "sortBy": "publishedAt",
+        "pageSize": 5
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        articles = response.json().get("articles", [])
+        return articles
+    else:
+        print(f"Erreur NewsAPI: {response.status_code}")
+        return []
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     tickers = magnificent_data['ticker'].unique()
@@ -36,6 +64,8 @@ def home():
     selected_ticker = None
     selected_top5_ticker = None
     timeframe = "max"
+
+    news_articles = []
 
     real_price_img_path = None
     predicted_dividend_img_path = None
@@ -47,6 +77,8 @@ def home():
     dividend_yield = None
     user_investment_top5fr = None
     dividend_yield_top5fr = None
+
+
   
     def get_filtered_data(data, timeframe):
         # Utiliser la dernière date disponible dans les données comme référence
@@ -169,6 +201,9 @@ def home():
             ax.grid(True)
             predicted_dividend_img_path = "static/predicted_dividend_plot.png"
             fig.savefig(predicted_dividend_img_path)
+
+            # Récupérer les actualités
+            news_articles = fetch_news(selected_ticker, NEWS_API_KEY)
 
             
 
@@ -306,8 +341,26 @@ def home():
         dividend_yield=dividend_yield,
         dividend_yield_top5fr=dividend_yield_top5fr,
         user_investment_top5fr=user_investment_top5fr,
-        user_investment=user_investment
+        user_investment=user_investment,
+        news_articles=news_articles,
     )
+
+
+'''@app.route("/global", methods=["GET", "POST"])
+def global_page():
+
+    tickers = all_stock_data['ticker'].unique()
+
+
+    if request.method == "POST" and request.form.get("ticker"):
+        selected_ticker = request.form.get("ticker")
+
+    return render_template(
+        "global.html",
+        tickers=tickers,
+        selected_ticker = selected_ticker,
+                           
+                           )'''
 
 
 if __name__ == "__main__":
