@@ -39,7 +39,10 @@ def home():
 
     real_price_img_path = None
     predicted_dividend_img_path = None
-    top_5_closing_img_paths = []
+
+    real_price_top5_img_path = None
+    predicted_dividend_top5_img_path = None
+  
 
 
     def get_filtered_data(data, timeframe):
@@ -82,8 +85,8 @@ def home():
                 return render_template(
                     "index.html",
                     tickers=tickers,
-                    top_5_fr_tickers=top_5_fr_tickers,
-                    top_5_closing_img_paths=top_5_closing_img_paths,
+                    # top_5_fr_tickers=top_5_fr_tickers,
+                    # top_5_closing_img_paths=top_5_closing_img_paths,
                     error_message=f"Le ticker {selected_ticker} ne verse pas de dividendes.",
                     selected_ticker=selected_ticker,
                     timeframe=timeframe,
@@ -97,8 +100,8 @@ def home():
                 return render_template(
                     "index.html",
                     tickers=tickers,
-                    top_5_fr_tickers=top_5_fr_tickers,
-                    top_5_closing_img_paths=top_5_closing_img_paths,
+                    #top_5_fr_tickers=top_5_fr_tickers,
+                    #top_5_closing_img_paths=top_5_closing_img_paths,
                     error_message=f"Aucune donnée commune disponible pour {selected_ticker}.",
                     selected_ticker=selected_ticker,
                     timeframe=timeframe,
@@ -155,8 +158,8 @@ def home():
             return render_template(
                 "index.html",
                 tickers=tickers,
-                top_5_fr_tickers=top_5_fr_tickers,
-                top_5_closing_img_paths=top_5_closing_img_paths,
+                #top_5_fr_tickers=top_5_fr_tickers,
+                #top_5_closing_img_paths=top_5_closing_img_paths,
                 error_message=f"Une erreur est survenue : {str(e)}",
                 selected_ticker=selected_ticker,
                 timeframe=timeframe,
@@ -176,9 +179,9 @@ def home():
             if dividends.empty:
                 return render_template(
                     "index.html",
-                    tickers=tickers,
                     top_5_fr_tickers=top_5_fr_tickers,
-                    top_5_closing_img_paths=top_5_closing_img_paths,
+                    #top_5_fr_tickers=top_5_fr_tickers,
+                    #top_5_closing_img_paths=top_5_closing_img_paths,
                     error_message=f"Le ticker {selected_top5_ticker} ne verse pas de dividendes.",
                     selected_top5_ticker=selected_top5_ticker,
                     timeframe=timeframe,
@@ -191,9 +194,9 @@ def home():
             if merged_data.empty:
                 return render_template(
                     "index.html",
-                    tickers=tickers,
                     top_5_fr_tickers=top_5_fr_tickers,
-                    top_5_closing_img_paths=top_5_closing_img_paths,
+                    #top_5_fr_tickers=top_5_fr_tickers,
+                    #top_5_closing_img_paths=top_5_closing_img_paths,
                     error_message=f"Aucune donnée commune disponible pour {selected_top5_ticker}.",
                     selected_top5_ticker=selected_top5_ticker,
                     timeframe=timeframe,
@@ -204,13 +207,13 @@ def home():
 
             fig_closing, ax_closing = plt.subplots(figsize=(10, 6))
             ax_closing.plot(df_filtered['date'], df_filtered['close'], label="Prix de Clôture Historiques", color="green")
-            ax_closing.set_title(f"Prix de Clôture Historiques - {selected_ticker}")
+            ax_closing.set_title(f"Prix de Clôture Historiques - {selected_top5_ticker}")
             ax_closing.set_xlabel("Date")
             ax_closing.set_ylabel("Prix de Clôture")
             ax_closing.legend()
             ax_closing.grid(True)
-            real_price_img_path = "static/real_price_top5.png"
-            fig_closing.savefig(real_price_img_path)
+            real_price_top5_img_path = "static/real_price_top5.png"
+            fig_closing.savefig(real_price_top5_img_path)
 
             last_date = df['date'].max()
             future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), end=pd.Timestamp("2026-12-31"), freq='D')
@@ -237,21 +240,19 @@ def home():
             fig, ax = plt.subplots(figsize=(10, 6))
             ax.plot(all_dates, all_dividends, label="Dividendes Historiques et Prédits", color="blue")
             ax.fill_between(future_dates, lower_bound_dividends, upper_bound_dividends, color='orange', alpha=0.3, label="Plage d'erreur ±8%")
-            ax.set_title(f"Prédiction des Dividendes - {selected_ticker}")
+            ax.set_title(f"Prédiction des Dividendes - {selected_top5_ticker}")
             ax.set_xlabel("Date")
             ax.set_ylabel("Dividendes")
             ax.legend()
             ax.grid(True)
-            predicted_dividend_img_path = "static/predicted_dividend_top5_plot.png"
-            fig.savefig(predicted_dividend_img_path)
+            predicted_dividend_top5_img_path = "static/predicted_dividend_top5_plot.png"
+            fig.savefig(predicted_dividend_top5_img_path)
 
 
         except Exception as e:
             return render_template(
                 "index.html",
-                tickers=tickers,
                 top_5_fr_tickers=top_5_fr_tickers,
-                top_5_closing_img_paths=top_5_closing_img_paths,
                 error_message=f"Une erreur est survenue : {str(e)}",
                 selected_top5_ticker=selected_top5_ticker,
                 timeframe=timeframe,
@@ -267,7 +268,8 @@ def home():
         timeframe=timeframe,
         real_price_img_path=real_price_img_path,
         predicted_dividend_img_path=predicted_dividend_img_path,
-        top_5_closing_img_paths=top_5_closing_img_paths
+        real_price_top5_img_path=real_price_top5_img_path,
+        predicted_dividend_top5_img_path=predicted_dividend_top5_img_path,
     )
 
 if __name__ == "__main__":

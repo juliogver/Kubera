@@ -27,7 +27,9 @@ all_dividends = []
 
 for ticker, dividends in dividends_data.items():
     dividends_df = dividends.reset_index()
-    dividends_df['Ticker'] = ticker
+    # Enlever le suffixe .PA
+    clean_ticker = ticker.replace('.PA', '')
+    dividends_df['Ticker'] = clean_ticker
     dividends_df['Date'] = pd.to_datetime(dividends_df['Date']).dt.date
     all_dividends.append(dividends_df)
 

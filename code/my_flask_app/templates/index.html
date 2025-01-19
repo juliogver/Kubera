@@ -56,6 +56,7 @@
                 <img src="{{ url_for('static', filename='predicted_dividend_plot.png') }}" alt="Dividendes Prévus" class="img-fluid shadow rounded">
             </div>
         </div>
+        {% endif %}
 
         <!-- Ajout des graphiques pour les 5 plus grandes entreprises françaises -->
         <h2 class="text-center mt-5">Top 5 Entreprises Françaises</h2>
@@ -63,17 +64,17 @@
             <div class="mb-3">
                 <label for="ticker_top5" class="form-label">Sélectionnez un ticker du Top 5 :</label>
                 <select name="ticker_top5" id="ticker_top5" class="form-select">
-                    {% for ticker in top_5_fr_tickers %}
-                    <option value="{{ ticker }}" {% if ticker == selected_ticker %}selected{% endif %}>
-                        {{ ticker }}
+                    {% for ticker_top5 in top_5_fr_tickers %}
+                    <option value="{{ ticker_top5 }}" {% if ticker_top5 == selected_ticker %}selected{% endif %}>
+                        {{ ticker_top5 }}
                     </option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="mb-3">
-                <label for="timeframe_top5" class="form-label">Sélectionnez une période :</label>
-                <select name="timeframe_top5" id="timeframe_top5" class="form-select">
+                <label for="timeframe" class="form-label">Sélectionnez une période :</label>
+                <select name="timeframe" id="timeframe" class="form-select">
                     <option value="1D" {% if timeframe == "1D" %}selected{% endif %}>1 Jour</option>
                     <option value="1W" {% if timeframe == "1W" %}selected{% endif %}>1 Semaine</option>
                     <option value="1M" {% if timeframe == "1M" %}selected{% endif %}>1 Mois</option>
@@ -85,12 +86,17 @@
             <button type="submit" class="btn btn-warning w-100">Afficher les Graphiques</button>
         </form>
 
+
+        {% if real_price_top5_img_path or predicted_dividend_img_path %}
         <div class="row mt-5">
-            {% for img_path in top_5_closing_img_paths %}
             <div class="col-md-6">
-                <img src="{{ url_for('static', filename='real_price_top5.png') }}" alt="Graphique Top 5" class="img-fluid shadow rounded">
+                <h2 class="text-center">Prix de Clôture Réels</h2>
+                <img src="{{ url_for('static', filename='real_price_top5.png') }}" alt="Prix Réels" class="img-fluid shadow rounded">
             </div>
-            {% endfor %}
+            <div class="col-md-6">
+                <h2 class="text-center">Prédiction des Dividendes</h2>
+                <img src="{{ url_for('static', filename='predicted_dividend_top5_plot.png') }}" alt="Dividendes Prévus" class="img-fluid shadow rounded">
+            </div>
         </div>
         {% endif %}
 
