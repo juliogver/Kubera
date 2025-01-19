@@ -6,11 +6,11 @@ from sklearn.linear_model import LinearRegression
 from datetime import datetime, timedelta
 
 # Charger les données de dividendes depuis le CSV
-dividend_csv_path = "../../data/magnificent_seven_dividends.csv"
+dividend_csv_path = "../data/magnificent_seven_dividends.csv"
 data_dividends = pd.read_csv(dividend_csv_path)
 
 # Charger les données de prix de clôture depuis un autre CSV
-price_csv_path = "../../data/magnificent_seven.csv"
+price_csv_path = "../data/magnificent_seven.csv"
 data_prices = pd.read_csv(price_csv_path)
 
 # Filtrer les données pour un ticker spécifique (par exemple AAPL)
