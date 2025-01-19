@@ -88,7 +88,7 @@
         <div class="row mt-5">
             {% for img_path in top_5_closing_img_paths %}
             <div class="col-md-6">
-                <img src="{{ url_for('static', filename=img_path) }}" alt="Graphique Top 5" class="img-fluid shadow rounded">
+                <img src="{{ url_for('static', filename='real_price_top5.png') }}" alt="Graphique Top 5" class="img-fluid shadow rounded">
             </div>
             {% endfor %}
         </div>
