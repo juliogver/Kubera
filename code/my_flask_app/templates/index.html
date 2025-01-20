@@ -184,6 +184,23 @@
         </div>
         {% endif %}
 
+        {% if news_articles_top5fr %}
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h3 class="card-title text-center">Actualités</h3>
+                <ul class="list-group">
+                    {% for article in news_articles_top5fr %}
+                    <li class="list-group-item">
+                        <a href="{{ article.url }}" target="_blank" class="text-decoration-none">{{ article.title }}</a>
+                        <br>
+                        <small class="text-muted">Source: {{ article.source.name }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
 
       
 
