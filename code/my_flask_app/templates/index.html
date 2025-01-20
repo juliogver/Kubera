@@ -189,11 +189,11 @@
             <div class="card-body">
                 <h3 class="card-title text-center">Actualités</h3>
                 <ul class="list-group">
-                    {% for article in news_articles_top5fr %}
+                    {% for article_top5fr in news_articles_top5fr %}
                     <li class="list-group-item">
-                        <a href="{{ article.url }}" target="_blank" class="text-decoration-none">{{ article.title }}</a>
+                        <a href="{{ article_top5fr.url }}" target="_blank" class="text-decoration-none">{{ article_top5fr.title }}</a>
                         <br>
-                        <small class="text-muted">Source: {{ article.source.name }}</small>
+                        <small class="text-muted">Source: {{ article_top5fr.source.name }}</small>
                     </li>
                     {% endfor %}
                 </ul>

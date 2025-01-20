@@ -66,6 +66,7 @@ def home():
     timeframe = "max"
 
     news_articles = []
+    news_articles_top5fr = []
 
     real_price_img_path = None
     predicted_dividend_img_path = None
@@ -316,6 +317,9 @@ def home():
             predicted_dividend_top5_img_path = "static/predicted_dividend_top5_plot.png"
             fig.savefig(predicted_dividend_top5_img_path)
 
+            # Récupérer les actualités
+            news_articles_top5fr = fetch_news(selected_ticker, NEWS_API_KEY)
+
 
         except Exception as e:
             return render_template(
@@ -343,6 +347,7 @@ def home():
         user_investment_top5fr=user_investment_top5fr,
         user_investment=user_investment,
         news_articles=news_articles,
+        news_articles_top5fr = news_articles_top5fr,
     )
 
 
