@@ -318,7 +318,7 @@ def home():
             fig.savefig(predicted_dividend_top5_img_path)
 
             # Récupérer les actualités
-            news_articles_top5fr = fetch_news(selected_ticker, NEWS_API_KEY)
+            news_articles_top5fr = fetch_news(selected_top5_ticker, NEWS_API_KEY)
 
 
         except Exception as e:
