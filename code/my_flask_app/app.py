@@ -351,21 +351,108 @@ def home():
     )
 
 
-'''@app.route("/global", methods=["GET", "POST"])
+@app.route("/global", methods=["GET", "POST"])
 def global_page():
 
-    tickers = all_stock_data['ticker'].unique()
+    tickers = magnificent_data['ticker'].unique()
+    selected_ticker = None
+
+    def get_filtered_data(data, timeframe):
+        # Utiliser la dernière date disponible dans les données comme référence
+        if data['date'].max() is pd.NaT:
+            return data  # Si les données sont vides ou incorrectes, renvoyer directement
+
+        last_date = data['date'].max()
+
+        if timeframe == "1D":
+            start_date = last_date - pd.Timedelta(days=1)
+        elif timeframe == "1W":
+            start_date = last_date - pd.Timedelta(weeks=1)
+        elif timeframe == "1M":
+            start_date = last_date - pd.DateOffset(months=1)
+        elif timeframe == "1Y":
+            start_date = last_date - pd.DateOffset(years=1)
+        else:  # "max"
+            return data
+
+        # Filtrer les données
+        filtered_data = data[data['date'] >= start_date]
+        print(f"Nombre de points après filtrage ({timeframe}): {len(filtered_data)}")  # Debug
+        return filtered_data
 
 
     if request.method == "POST" and request.form.get("ticker"):
+
+
         selected_ticker = request.form.get("ticker")
+        timeframe = request.form.get("timeframe")
+        user_investment = request.form.get("investment")
+
+        
+
+        try:
+            df = magnificent_data[magnificent_data['ticker'] == selected_ticker].copy()
+            df_filtered = get_filtered_data(df, timeframe)
+            dividends = dividend_data[dividend_data['ticker'] == selected_ticker].copy()
+
+            if not dividends.empty and not df.empty:
+                    df = df.dropna(subset=['close'])
+                    dividends = dividends.dropna(subset=['dividends'])
+                    merged_data = pd.merge(dividends, df, on=['date', 'ticker'], how='inner')
+
+                    if not merged_data.empty:
+                        merged_data['dividend_to_price_ratio'] = merged_data['dividends'] / merged_data['close']
+                        avg_ratio = merged_data['dividend_to_price_ratio'].mean()
+
+                        if user_investment and avg_ratio:
+                            user_investment = float(user_investment)
+                            dividend_yield = user_investment * avg_ratio
+
+            if dividends.empty:
+                return render_template(
+                    "index.html",
+                    tickers=tickers,
+                    # top_5_fr_tickers=top_5_fr_tickers,
+                    # top_5_closing_img_paths=top_5_closing_img_paths,
+                    error_message=f"Le ticker {selected_ticker} ne verse pas de dividendes.",
+                    selected_ticker=selected_ticker,
+                    timeframe=timeframe,
+                )
+
+            dividends = dividends.dropna(subset=['dividends'])
+            df = df.dropna(subset=['close'])
+            merged_data = pd.merge(dividends, df, on=['date', 'ticker'], how='inner')
+
+            if merged_data.empty:
+                return render_template(
+                    "index.html",
+                    tickers=tickers,
+                    #top_5_fr_tickers=top_5_fr_tickers,
+                    #top_5_closing_img_paths=top_5_closing_img_paths,
+                    error_message=f"Aucune donnée commune disponible pour {selected_ticker}.",
+                    selected_ticker=selected_ticker,
+                    timeframe=timeframe,
+                )
+            
+        except Exception as e:
+            return render_template(
+                "index.html",
+                tickers=tickers,
+                #top_5_fr_tickers=top_5_fr_tickers,
+                #top_5_closing_img_paths=top_5_closing_img_paths,
+                error_message=f"Une erreur est survenue : {str(e)}",
+                selected_ticker=selected_ticker,
+                timeframe=timeframe,
+            )
+
+
 
     return render_template(
         "global.html",
         tickers=tickers,
         selected_ticker = selected_ticker,
                            
-                           )'''
+                           )
 
 
 if __name__ == "__main__":
