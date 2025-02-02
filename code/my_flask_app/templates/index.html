@@ -3,34 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prédictions des Actions</title>
+    <title>Prédictions des Dividendes - Kubera</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="bg-light">
 
     <header class="bg-white py-3">
         <div class="container d-flex align-items-center">
-            <a href="/global" class="btn btn-secondary me-3">Page Globale</a>
-            <img src="{{ url_for('static', filename='logo.webp') }}" alt="Kubera Logo" style="height: 60px;">
-            <h1 class="ms-3">Kubera</h1>
+            <h1 class="ms-3">Kubera - Prédictions des Dividendes</h1>
         </div>
     </header>
 
-
     <div class="container mt-5">
-        <h1 class="text-center mb-4">Analyse et Prédiction des Actions</h1>
+        <h2 class="text-center">Analyse et Prédiction des Dividendes</h2>
 
-        <!-- Paragraphe de présentation du projet -->
-        <p class="text-center mt-3">
-            Bienvenue sur Kubera, une plateforme d'aide à la décision et de prédiction de dividendes. 
-            Conçue pour les nouveaux investisseurs, Kubera vous guide dans vos investissements en vous 
-            offrant une analyse complète du marché boursier et des outils de prédiction pour prendre des décisions éclairées.
-        </p>
-                
-        <!-- Ajout du titre "Magnificent Seven" -->
-        <h2 class="text-center mt-4">Magnificent Seven</h2>
-
+        <!-- Formulaire pour choisir un ticker -->
         <form method="POST" action="/" class="bg-white p-4 shadow rounded">
             <div class="mb-3">
                 <label for="ticker" class="form-label">Sélectionnez un ticker :</label>
@@ -43,195 +30,45 @@
                 </select>
             </div>
 
-            <div class="mb-3">
-                <label for="timeframe" class="form-label">Sélectionnez une période :</label>
-                <select name="timeframe" id="timeframe" class="form-select">
-                    <option value="1D" {% if timeframe == "1D" %}selected{% endif %}>1 Jour</option>
-                    <option value="1W" {% if timeframe == "1W" %}selected{% endif %}>1 Semaine</option>
-                    <option value="1M" {% if timeframe == "1M" %}selected{% endif %}>1 Mois</option>
-                    <option value="1Y" {% if timeframe == "1Y" %}selected{% endif %}>1 An</option>
-                    <option value="max" {% if timeframe == "max" %}selected{% endif %}>Max</option>
-                </select>
-            </div>
-
-            <form method="POST" action="/" class="bg-white p-4 shadow rounded">
-                <div class="input-group mb-3">
-                    <input type="number" step="0.01" name="investment" id="investment" class="form-control" placeholder="Montant en euros" value="{{ user_investment }}">
-                    <button type="submit" name="action" value="calculate_investment" class="btn btn-success">Calculer</button>
-                </div>
-            </form>
-
-
-
-            <button type="submit" class="btn btn-primary w-100">Afficher les Graphiques</button>
-
-            {% if error_message %}
-            <div class="alert alert-danger mt-4 text-center">
-                <p>{{ error_message }}</p>
-            </div>
-            {% endif %}
+            <button type="submit" class="btn btn-primary w-100">Afficher les résultats</button>
         </form>
-        
 
-        {% if real_price_img_path or predicted_dividend_img_path %}
-        <div class="row mt-5">
-            <div class="col-md-6">
-                <h2 class="text-center">Prix de Clôture Réels</h2>
-                <img src="{{ url_for('static', filename='real_price_plot.png') }}" alt="Prix Réels" class="img-fluid shadow rounded">
-            </div>
-            <div class="col-md-6">
-                <h2 class="text-center">Prédiction des Dividendes</h2>
-                <img src="{{ url_for('static', filename='predicted_dividend_plot.png') }}" alt="Dividendes Prévus" class="img-fluid shadow rounded">
-            </div>
+        <!-- Graphique interactif des dividendes -->
+        {% if predicted_dividend_div %}
+        <div class="mt-5">
+            <h3 class="text-center">Graphique des Dividendes avec Plage d'Erreur ±8%</h3>
+            {{ predicted_dividend_div | safe }}
         </div>
         {% endif %}
 
-         <!-- Section pour afficher le rendement calculé -->
-        {% if dividend_yield %}
-        <div class="alert alert-success mt-4">
-            <h4 class="text-center">Rendement Calculé</h4>
-            <p class="text-center">
-                Pour un investissement de <strong>{{ user_investment }} €</strong>, votre dividende estimé sera de 
-                <strong>{{ dividend_yield | round(2) }} €</strong>.
-            </p>
+        <!-- Graphique interactif des prix historiques -->
+        {% if price_history_div %}
+        <div class="mt-5">
+            <h3 class="text-center">Graphique des Prix de Clôture Historiques</h3>
+            {{ price_history_div | safe }}
         </div>
         {% endif %}
 
+        <!-- Section des actualités -->
         {% if news_articles %}
-        <div class="card shadow mb-4">
-            <div class="card-body">
-                <h3 class="card-title text-center">Actualités</h3>
-                <ul class="list-group">
-                    {% for article in news_articles %}
-                    <li class="list-group-item">
-                        <a href="{{ article.url }}" target="_blank" class="text-decoration-none">{{ article.title }}</a>
-                        <br>
-                        <small class="text-muted">Source: {{ article.source.name }}</small>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
+        <div class="mt-5">
+            <h3 class="text-center">Actualités pour {{ selected_ticker }}</h3>
+            <ul class="list-group">
+                {% for article in news_articles %}
+                <li class="list-group-item">
+                    <a href="{{ article.url }}" target="_blank" class="text-decoration-none">{{ article.title }}</a>
+                    <br>
+                    <small class="text-muted">Source : {{ article.source.name }}</small>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
         {% endif %}
-
-
-
-        <!-- Ajout des graphiques pour les 5 plus grandes entreprises françaises -->
-        <h2 class="text-center mt-5">Top 5 Entreprises Françaises</h2>
-        <form method="POST" action="/" class="bg-white p-4 shadow rounded mt-4">
-            <div class="mb-3">
-                <label for="ticker_top5" class="form-label">Sélectionnez un ticker du Top 5 :</label>
-                <select name="ticker_top5" id="ticker_top5" class="form-select">
-                    {% for ticker_top5 in top_5_fr_tickers %}
-                    <option value="{{ ticker_top5 }}" {% if ticker_top5 == selected_ticker %}selected{% endif %}>
-                        {{ ticker_top5 }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label for="timeframe" class="form-label">Sélectionnez une période :</label>
-                <select name="timeframe" id="timeframe" class="form-select">
-                    <option value="1D" {% if timeframe == "1D" %}selected{% endif %}>1 Jour</option>
-                    <option value="1W" {% if timeframe == "1W" %}selected{% endif %}>1 Semaine</option>
-                    <option value="1M" {% if timeframe == "1M" %}selected{% endif %}>1 Mois</option>
-                    <option value="1Y" {% if timeframe == "1Y" %}selected{% endif %}>1 An</option>
-                    <option value="max" {% if timeframe == "max" %}selected{% endif %}>Max</option>
-                </select>
-            </div>
-
-            <form method="POST" action="/" class="bg-white p-4 shadow rounded">
-                <div class="input-group mb-3">
-                    <input type="number" step="0.01" name="investment" id="investment" class="form-control" placeholder="Montant en euros" value="{{ user_investment }}">
-                    <button type="submit" name="action" value="calculate_investment" class="btn btn-success">Calculer</button>
-                </div>
-            </form>
-
-
-
-            <button type="submit" class="btn btn-warning w-100">Afficher les Graphiques</button>
-
-            {% if error_message_fr %}
-            <div class="alert alert-danger mt-4 text-center">
-                <p>{{ error_message_fr }}</p>
-            </div>
-            {% endif %}
-        </form>
-
-
-        {% if real_price_top5_img_path or predicted_dividend_img_path %}
-        <div class="row mt-5">
-            <div class="col-md-6">
-                <h2 class="text-center">Prix de Clôture Réels</h2>
-                <img src="{{ url_for('static', filename='real_price_top5.png') }}" alt="Prix Réels" class="img-fluid shadow rounded">
-            </div>
-            <div class="col-md-6">
-                <h2 class="text-center">Prédiction des Dividendes</h2>
-                <img src="{{ url_for('static', filename='predicted_dividend_top5_plot.png') }}" alt="Dividendes Prévus" class="img-fluid shadow rounded">
-            </div>
-        </div>
-        {% endif %}
-
-         <!-- Section pour afficher le rendement calculé -->
-        {% if dividend_yield_top5fr %}
-        <div class="alert alert-success mt-4">
-            <h4 class="text-center">Rendement Calculé</h4>
-            <p class="text-center">
-                Pour un investissement de <strong>{{ user_investment_top5fr }} €</strong>, votre dividende estimé sera de 
-                <strong>{{ dividend_yield_top5fr | round(2) }} €</strong>.
-            </p>
-        </div>
-        {% endif %}
-
-        {% if news_articles_top5fr %}
-        <div class="card shadow mb-4">
-            <div class="card-body">
-                <h3 class="card-title text-center">Actualités</h3>
-                <ul class="list-group">
-                    {% for article_top5fr in news_articles_top5fr %}
-                    <li class="list-group-item">
-                        <a href="{{ article_top5fr.url }}" target="_blank" class="text-decoration-none">{{ article_top5fr.title }}</a>
-                        <br>
-                        <small class="text-muted">Source: {{ article_top5fr.source.name }}</small>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% endif %}
-
-
-      
-
     </div>
 
-
-    <!-- Footer -->
-    <footer class="bg-dark text-light mt-5 py-4">
-        <div class="container">
-            <h5 class="text-center">À propos de nous</h5>
-            <p class="text-center mt-3">
-                Kubera a été créée pour guider les nouveaux investisseurs dans leurs décisions financières. 
-                Notre équipe est composée de passionnés et experts en finance et technologie :
-            </p>
-            <ul class="list-unstyled text-center">
-                <li>Jules Gravier - CEO</li>
-                <li>Anna Meliz – Data Analyst</li>
-                <li>Arthur Gagniaire - Architecte base de données</li>
-                <li>Enzo Cuoc – Data Analyst</li>
-                <li>Julien de la Harpe - Développeur</li>
-            </ul>
-            <p class="text-center mt-3">
-                Ensemble, nous œuvrons pour démocratiser l'accès à des analyses financières de qualité.
-            </p>
-        </div>
-        <div class="container text-center">
-            <img src="{{ url_for('static', filename='logo.webp') }}" alt="Kubera Logo" style="height: 50px;">
-            <p class="mt-3">© 2025 Kubera. Tous droits réservés.</p>
-        </div>
+    <footer class="bg-dark text-light mt-5 py-4 text-center">
+        <p>© 2025 Kubera. Tous droits réservés.</p>
     </footer>
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

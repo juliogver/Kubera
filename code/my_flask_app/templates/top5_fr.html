@@ -1,0 +1,18 @@
+<h2 class="text-center mt-5">Top 5 Entreprises Françaises</h2>
+<form method="POST" action="/" class="bg-white p-4 shadow rounded">
+    <div class="mb-3">
+        <label for="ticker_top5" class="form-label">Sélectionnez un ticker :</label>
+        <select name="ticker_top5" id="ticker_top5" class="form-select">
+            {% for ticker_top5 in top_5_fr_tickers %}
+            <option value="{{ ticker_top5 }}" {% if ticker_top5 == selected_top5_ticker %}selected{% endif %}>
+                {{ ticker_top5 }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="investment_top5" class="form-label">Investissement (en €) :</label>
+        <input type="number" step="0.01" name="investment_top5" class="form-control" value="{{ user_investment_top5fr }}">
+    </div>
+    <button type="submit" class="btn btn-warning w-100">Afficher les résultats</button>
+</form>

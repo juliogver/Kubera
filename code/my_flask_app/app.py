@@ -1,51 +1,47 @@
-from flask import Flask, render_template, request
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import PolynomialFeatures
+from flask import Flask, render_template, request
 from sklearn.linear_model import LinearRegression
-import numpy as np
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import yfinance as yf
 import requests
-from datetime import datetime
 
 app = Flask(__name__)
 
-# Clé API pour NewsAPI
+# Clé API NewsAPI
 NEWS_API_KEY = "57d058c57a1c4ed3aa11d34b0bde1638"
 
-# Charger les données
-magnificent_csv_path = "../../data/magnificent_seven.csv"
-dividend_data_path = "../../data/magnificent_seven_dividends.csv"
-top_5_fr_csv_path = "../../data/top_5_fr.csv"
-dividend_top_5fr_path = "../../data/french_top5_dividends.csv"
+# Tickers des Magnificent Seven
+magnificent_seven_tickers = ["AAPL", "MSFT", "META", "AMZN", "GOOGL", "NVDA", "TSLA"]
 
-all_stock_data_path = "../../data/all_stock_data.csv"  # Assurez-vous que ce fichier est au bon endroit
+# Fonction pour récupérer les données de marché via yfinance
+def get_stock_data(ticker):
+    stock = yf.Ticker(ticker)
+    df = stock.history(period="10y").reset_index()
+    df = df.rename(columns={"Date": "Date", "Close": "Close", "Dividends": "Dividends"})
+    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)  # Convertir en datetime naïf
 
+    # Ajouter un point fictif si les données s’arrêtent avant la date actuelle
+    last_date = df['Date'].max()
+    if last_date < pd.Timestamp.now() - pd.DateOffset(months=1):
+        # Ajouter un point pour janvier 2025 avec le dernier dividende connu
+        last_dividend = df['Dividends'].iloc[-1]
+        new_point = pd.DataFrame({
+            "Date": [last_date + pd.DateOffset(months=1)],
+            "Close": [df['Close'].iloc[-1]],  # Dernier prix connu
+            "Dividends": [last_dividend]  # Dernier dividende connu
+        })
+        df = pd.concat([df, new_point], ignore_index=True)
 
-magnificent_data = pd.read_csv(magnificent_csv_path)
-dividend_data = pd.read_csv(dividend_data_path)
-top_5_fr_data = pd.read_csv(top_5_fr_csv_path)
-dividend_top5 = pd.read_csv(dividend_top_5fr_path)
-
-all_stock_data = pd.read_csv(all_stock_data_path)
-
-# Convertir les dates
-magnificent_data['date'] = pd.to_datetime(magnificent_data['date'], errors='coerce')
-dividend_data['date'] = pd.to_datetime(dividend_data['date'], errors='coerce')
-top_5_fr_data['date'] = pd.to_datetime(top_5_fr_data['date'], errors='coerce')
-dividend_top5['date'] = pd.to_datetime(dividend_top5['date'], errors='coerce')
-
-# Supprimer les colonnes inutiles
-magnificent_data = magnificent_data[['date', 'ticker', 'close']]
-top_5_fr_data = top_5_fr_data[['date', 'ticker', 'close']]
-
+    return df
 
 # Fonction pour récupérer les actualités via NewsAPI
-def fetch_news(ticker, api_key):
+def fetch_news(ticker):
     url = "https://newsapi.org/v2/everything"
     params = {
         "q": ticker,
-        "apiKey": api_key,
-        "language": "en",
+        "apiKey": NEWS_API_KEY,
+        "language": "fr",
         "sortBy": "publishedAt",
         "pageSize": 5
     }
@@ -54,407 +50,143 @@ def fetch_news(ticker, api_key):
         articles = response.json().get("articles", [])
         return articles
     else:
-        print(f"Erreur NewsAPI: {response.status_code}")
+        print(f"Erreur lors de la récupération des actualités : {response.status_code}")
         return []
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    tickers = magnificent_data['ticker'].unique()
-    top_5_fr_tickers = top_5_fr_data['ticker'].unique()
-    selected_ticker = None
-    selected_top5_ticker = None
-    timeframe = "max"
-
+    selected_ticker = "AAPL"  # Par défaut
     news_articles = []
-    news_articles_top5fr = []
 
-    real_price_img_path = None
-    predicted_dividend_img_path = None
-
-    real_price_top5_img_path = None
-    predicted_dividend_top5_img_path = None
-
-    user_investment = None
-    dividend_yield = None
-    user_investment_top5fr = None
-    dividend_yield_top5fr = None
-
-
-  
-    def get_filtered_data(data, timeframe):
-        # Utiliser la dernière date disponible dans les données comme référence
-        if data['date'].max() is pd.NaT:
-            return data  # Si les données sont vides ou incorrectes, renvoyer directement
-
-        last_date = data['date'].max()
-
-        if timeframe == "1D":
-            start_date = last_date - pd.Timedelta(days=1)
-        elif timeframe == "1W":
-            start_date = last_date - pd.Timedelta(weeks=1)
-        elif timeframe == "1M":
-            start_date = last_date - pd.DateOffset(months=1)
-        elif timeframe == "1Y":
-            start_date = last_date - pd.DateOffset(years=1)
-        else:  # "max"
-            return data
-
-        # Filtrer les données
-        filtered_data = data[data['date'] >= start_date]
-        print(f"Nombre de points après filtrage ({timeframe}): {len(filtered_data)}")  # Debug
-        return filtered_data
-
-
-    # Traitement pour le Magnificent Seven
-    if request.method == "POST" and request.form.get("ticker"):
+    if request.method == "POST":
         selected_ticker = request.form.get("ticker")
-        timeframe = request.form.get("timeframe")
-        user_investment = request.form.get("investment")
 
-        
+    # Charger les données de stock pour le ticker sélectionné
+    df = get_stock_data(selected_ticker)
 
-        try:
-            df = magnificent_data[magnificent_data['ticker'] == selected_ticker].copy()
-            df_filtered = get_filtered_data(df, timeframe)
-            dividends = dividend_data[dividend_data['ticker'] == selected_ticker].copy()
+    # Supprimer les lignes avec des dividendes à 0 ou manquants
+    df = df.dropna(subset=["Close", "Dividends"])
+    df = df[df["Dividends"] > 0]
 
-            if not dividends.empty and not df.empty:
-                    df = df.dropna(subset=['close'])
-                    dividends = dividends.dropna(subset=['dividends'])
-                    merged_data = pd.merge(dividends, df, on=['date', 'ticker'], how='inner')
+    if df.empty:
+        return render_template("index.html", tickers=magnificent_seven_tickers, selected_ticker=selected_ticker, error_message="Pas de dividendes valides pour ce ticker.")
 
-                    if not merged_data.empty:
-                        merged_data['dividend_to_price_ratio'] = merged_data['dividends'] / merged_data['close']
-                        avg_ratio = merged_data['dividend_to_price_ratio'].mean()
+    # Préparer les données pour la régression linéaire
+    base_date = df['Date'].min()
+    date_numeric = (df['Date'] - base_date).dt.days.values.reshape(-1, 1)
 
-                        if user_investment and avg_ratio:
-                            user_investment = float(user_investment)
-                            dividend_yield = user_investment * avg_ratio
+    # Régression linéaire sur les dividendes
+    model_dividends = LinearRegression()
+    model_dividends.fit(date_numeric, df['Dividends'])
 
-            if dividends.empty:
-                return render_template(
-                    "index.html",
-                    tickers=tickers,
-                    # top_5_fr_tickers=top_5_fr_tickers,
-                    # top_5_closing_img_paths=top_5_closing_img_paths,
-                    error_message=f"Le ticker {selected_ticker} ne verse pas de dividendes.",
-                    selected_ticker=selected_ticker,
-                    timeframe=timeframe,
-                )
+    # Prédiction des dividendes futurs
+    future_dates = pd.date_range(start=df['Date'].max() + pd.DateOffset(days=1), periods=36, freq="M")
+    future_dates = future_dates.tz_localize(None)  # Convertir les futures dates en datetime naïf
 
-            dividends = dividends.dropna(subset=['dividends'])
-            df = df.dropna(subset=['close'])
-            merged_data = pd.merge(dividends, df, on=['date', 'ticker'], how='inner')
+    future_date_numeric = (future_dates - base_date).days.values.reshape(-1, 1)
+    predicted_dividends = model_dividends.predict(future_date_numeric)
 
-            if merged_data.empty:
-                return render_template(
-                    "index.html",
-                    tickers=tickers,
-                    #top_5_fr_tickers=top_5_fr_tickers,
-                    #top_5_closing_img_paths=top_5_closing_img_paths,
-                    error_message=f"Aucune donnée commune disponible pour {selected_ticker}.",
-                    selected_ticker=selected_ticker,
-                    timeframe=timeframe,
-                )
+    # Corriger les prédictions négatives si elles existent
+    predicted_dividends = [max(0, val) for val in predicted_dividends]
 
-            merged_data['dividend_to_price_ratio'] = merged_data['dividends'] / merged_data['close']
-            avg_ratio = merged_data['dividend_to_price_ratio'].mean()
+    # Plage d’erreur pour les dividendes (±8 %)
+    lower_bound_dividends = [val * 0.92 for val in predicted_dividends]
+    upper_bound_dividends = [val * 1.08 for val in predicted_dividends]
 
-            fig_closing, ax_closing = plt.subplots(figsize=(10, 6))
-            ax_closing.plot(df_filtered['date'], df_filtered['close'], label="Prix de Clôture Historiques", color="green")
-            ax_closing.set_title(f"Prix de Clôture Historiques - {selected_ticker}")
-            ax_closing.set_xlabel("Date")
-            ax_closing.set_ylabel("Prix de Clôture")
-            ax_closing.legend()
-            ax_closing.grid(True)
-            real_price_img_path = "static/real_price_plot.png"
-            fig_closing.savefig(real_price_img_path)
+    # --- Graphique des Dividendes ---
+    fig_dividends = make_subplots()
 
-            last_date = df['date'].max()
-            future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), end=pd.Timestamp("2026-12-31"), freq='D')
+    # Tracé des dividendes historiques
+    fig_dividends.add_trace(go.Scatter(
+        x=df["Date"],
+        y=df["Dividends"],
+        mode='lines+markers',
+        name="Dividendes Historiques",
+        line=dict(color='green')
+    ))
 
-            base_date = df['date'].min()
-            date_numeric = (df['date'] - base_date).dt.days
-            poly = PolynomialFeatures(degree=3)
-            date_numeric_poly = poly.fit_transform(date_numeric.values.reshape(-1, 1))
+    # Tracé des prédictions des dividendes
+    fig_dividends.add_trace(go.Scatter(
+        x=future_dates,
+        y=predicted_dividends,
+        mode='lines',
+        name="Dividendes Prévus",
+        line=dict(color='blue')
+    ))
 
-            model_prices = LinearRegression()
-            model_prices.fit(date_numeric_poly, df['close'])
+    # Plage d'erreur des prédictions
+    fig_dividends.add_trace(go.Scatter(
+        x=list(future_dates) + list(future_dates[::-1]),
+        y=list(upper_bound_dividends) + list(lower_bound_dividends[::-1]),
+        fill='toself',
+        fillcolor='rgba(173,216,230,0.3)',
+        line=dict(color='rgba(255,255,255,0)'),
+        hoverinfo="skip",
+        showlegend=True,
+        name="Plage d'erreur ±8%"
+    ))
 
-            future_date_numeric = (future_dates - base_date).days
-            future_date_numeric_poly = poly.transform(np.array(future_date_numeric).reshape(-1, 1))
-            predicted_prices = model_prices.predict(future_date_numeric_poly)
-            predicted_dividends = predicted_prices * avg_ratio
+    fig_dividends.update_layout(
+        title=f"Prédiction des Dividendes - {selected_ticker}",
+        xaxis_title="Date",
+        yaxis_title="Dividendes",
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=[
+                    dict(count=1, label="1M", step="month", stepmode="backward"),
+                    dict(count=6, label="6M", step="month", stepmode="backward"),
+                    dict(count=1, label="1Y", step="year", stepmode="backward"),
+                    dict(step="all")
+                ]
+            ),
+            rangeslider=dict(visible=True),
+            type="date"
+        )
+    )
 
-            lower_bound_dividends = predicted_dividends * 0.92
-            upper_bound_dividends = predicted_dividends * 1.08
+    # --- Graphique des Prix Historiques ---
+    fig_prices = go.Figure()
+    fig_prices.add_trace(go.Scatter(
+        x=df["Date"],
+        y=df["Close"],
+        mode='lines',
+        name="Prix de Clôture Historiques",
+        line=dict(color='orange')
+    ))
 
-            all_dates = pd.concat([merged_data['date'], pd.Series(future_dates)], ignore_index=True)
-            all_dividends = pd.concat([merged_data['dividends'], pd.Series(predicted_dividends)], ignore_index=True)
+    fig_prices.update_layout(
+        title=f"Prix de Clôture Historiques - {selected_ticker}",
+        xaxis_title="Date",
+        yaxis_title="Prix de Clôture",
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=[
+                    dict(count=1, label="1M", step="month", stepmode="backward"),
+                    dict(count=6, label="6M", step="month", stepmode="backward"),
+                    dict(count=1, label="1Y", step="year", stepmode="backward"),
+                    dict(step="all")
+                ]
+            ),
+            rangeslider=dict(visible=True),
+            type="date"
+        )
+    )
 
-            fig, ax = plt.subplots(figsize=(10, 6))
-            ax.plot(all_dates, all_dividends, label="Dividendes Historiques et Prédits", color="blue")
-            ax.fill_between(future_dates, lower_bound_dividends, upper_bound_dividends, color='orange', alpha=0.3, label="Plage d'erreur ±8%")
-            ax.set_title(f"Prédiction des Dividendes - {selected_ticker}")
-            ax.set_xlabel("Date")
-            ax.set_ylabel("Dividendes")
-            ax.legend()
-            ax.grid(True)
-            predicted_dividend_img_path = "static/predicted_dividend_plot.png"
-            fig.savefig(predicted_dividend_img_path)
+    # Convertir les graphiques en HTML
+    predicted_dividend_div = fig_dividends.to_html(full_html=False)
+    price_history_div = fig_prices.to_html(full_html=False)
 
-            # Récupérer les actualités
-            news_articles = fetch_news(selected_ticker, NEWS_API_KEY)
-
-            
-
-
-        except Exception as e:
-            return render_template(
-                "index.html",
-                tickers=tickers,
-                #top_5_fr_tickers=top_5_fr_tickers,
-                #top_5_closing_img_paths=top_5_closing_img_paths,
-                error_message=f"Une erreur est survenue : {str(e)}",
-                selected_ticker=selected_ticker,
-                timeframe=timeframe,
-            )
-
-     # Gestion de la sélection des tickers pour le Top 5 Français
-    if request.method == "POST" and "ticker_top5" in request.form:
-            
-        selected_top5_ticker = request.form.get("ticker_top5")
-        timeframe = request.form.get("timeframe")
-        user_investment_top5fr = request.form.get("investment")
-
-        try:
-            df = top_5_fr_data[top_5_fr_data['ticker'] == selected_top5_ticker].copy()
-            df_filtered = get_filtered_data(df, timeframe)
-            dividends = dividend_top5[dividend_top5['ticker'] == selected_top5_ticker].copy()
-
-            if not dividends.empty and not df.empty:
-                    df = df.dropna(subset=['close'])
-                    dividends = dividends.dropna(subset=['dividends'])
-                    merged_data = pd.merge(dividends, df, on=['date', 'ticker'], how='inner')
-
-                    if not merged_data.empty:
-                        merged_data['dividend_to_price_ratio'] = merged_data['dividends'] / merged_data['close']
-                        avg_ratio = merged_data['dividend_to_price_ratio'].mean()
-
-                        if user_investment_top5fr and avg_ratio:
-                            user_investment_top5fr = float(user_investment_top5fr)
-                            dividend_yield_top5fr = user_investment_top5fr * avg_ratio
-
-            if dividends.empty:
-                return render_template(
-                    "index.html",
-                    top_5_fr_tickers=top_5_fr_tickers,
-                    #top_5_fr_tickers=top_5_fr_tickers,
-                    #top_5_closing_img_paths=top_5_closing_img_paths,
-                    error_message_fr=f"Le ticker {selected_top5_ticker} ne verse pas de dividendes.",
-                    selected_top5_ticker=selected_top5_ticker,
-                    timeframe=timeframe,
-                )
-
-            dividends = dividends.dropna(subset=['dividends'])
-            df = df.dropna(subset=['close'])
-            merged_data = pd.merge(dividends, df, on=['date', 'ticker'], how='inner')
-
-            if merged_data.empty:
-                return render_template(
-                    "index.html",
-                    top_5_fr_tickers=top_5_fr_tickers,
-                    #top_5_fr_tickers=top_5_fr_tickers,
-                    #top_5_closing_img_paths=top_5_closing_img_paths,
-                    error_message_fr=f"Aucune donnée commune disponible pour {selected_top5_ticker}.",
-                    selected_top5_ticker=selected_top5_ticker,
-                    timeframe=timeframe,
-                )
-
-            merged_data['dividend_to_price_ratio'] = merged_data['dividends'] / merged_data['close']
-            avg_ratio = merged_data['dividend_to_price_ratio'].mean()
-
-            fig_closing, ax_closing = plt.subplots(figsize=(10, 6))
-            ax_closing.plot(df_filtered['date'], df_filtered['close'], label="Prix de Clôture Historiques", color="green")
-            ax_closing.set_title(f"Prix de Clôture Historiques - {selected_top5_ticker}")
-            ax_closing.set_xlabel("Date")
-            ax_closing.set_ylabel("Prix de Clôture")
-            ax_closing.legend()
-            ax_closing.grid(True)
-            real_price_top5_img_path = "static/real_price_top5.png"
-            fig_closing.savefig(real_price_top5_img_path)
-
-            last_date = df['date'].max()
-            future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), end=pd.Timestamp("2026-12-31"), freq='D')
-
-            base_date = df['date'].min()
-            date_numeric = (df['date'] - base_date).dt.days
-            poly = PolynomialFeatures(degree=3)
-            date_numeric_poly = poly.fit_transform(date_numeric.values.reshape(-1, 1))
-
-            model_prices = LinearRegression()
-            model_prices.fit(date_numeric_poly, df['close'])
-
-            future_date_numeric = (future_dates - base_date).days
-            future_date_numeric_poly = poly.transform(np.array(future_date_numeric).reshape(-1, 1))
-            predicted_prices = model_prices.predict(future_date_numeric_poly)
-            predicted_dividends = predicted_prices * avg_ratio
-
-            lower_bound_dividends = predicted_dividends * 0.92
-            upper_bound_dividends = predicted_dividends * 1.08
-
-            all_dates = pd.concat([merged_data['date'], pd.Series(future_dates)], ignore_index=True)
-            all_dividends = pd.concat([merged_data['dividends'], pd.Series(predicted_dividends)], ignore_index=True)
-
-            fig, ax = plt.subplots(figsize=(10, 6))
-            ax.plot(all_dates, all_dividends, label="Dividendes Historiques et Prédits", color="blue")
-            ax.fill_between(future_dates, lower_bound_dividends, upper_bound_dividends, color='orange', alpha=0.3, label="Plage d'erreur ±8%")
-            ax.set_title(f"Prédiction des Dividendes - {selected_top5_ticker}")
-            ax.set_xlabel("Date")
-            ax.set_ylabel("Dividendes")
-            ax.legend()
-            ax.grid(True)
-            predicted_dividend_top5_img_path = "static/predicted_dividend_top5_plot.png"
-            fig.savefig(predicted_dividend_top5_img_path)
-
-            # Récupérer les actualités
-            news_articles_top5fr = fetch_news(selected_top5_ticker, NEWS_API_KEY)
-
-
-        except Exception as e:
-            return render_template(
-                "index.html",
-                top_5_fr_tickers=top_5_fr_tickers,
-                error_message_fr=f"Une erreur est survenue : {str(e)}",
-                selected_top5_ticker=selected_top5_ticker,
-                timeframe=timeframe,
-            )
-
+    # Récupérer les actualités
+    news_articles = fetch_news(selected_ticker)
 
     return render_template(
         "index.html",
-        tickers=tickers,
-        top_5_fr_tickers=top_5_fr_tickers,
+        predicted_dividend_div=predicted_dividend_div,
+        price_history_div=price_history_div,
         selected_ticker=selected_ticker,
-        selected_top5_ticker=selected_top5_ticker,
-        timeframe=timeframe,
-        real_price_img_path=real_price_img_path,
-        predicted_dividend_img_path=predicted_dividend_img_path,
-        real_price_top5_img_path=real_price_top5_img_path,
-        predicted_dividend_top5_img_path=predicted_dividend_top5_img_path,
-        dividend_yield=dividend_yield,
-        dividend_yield_top5fr=dividend_yield_top5fr,
-        user_investment_top5fr=user_investment_top5fr,
-        user_investment=user_investment,
-        news_articles=news_articles,
-        news_articles_top5fr = news_articles_top5fr,
+        tickers=magnificent_seven_tickers,
+        news_articles=news_articles
     )
-
-
-@app.route("/global", methods=["GET", "POST"])
-def global_page():
-
-    tickers = magnificent_data['ticker'].unique()
-    selected_ticker = None
-
-    def get_filtered_data(data, timeframe):
-        # Utiliser la dernière date disponible dans les données comme référence
-        if data['date'].max() is pd.NaT:
-            return data  # Si les données sont vides ou incorrectes, renvoyer directement
-
-        last_date = data['date'].max()
-
-        if timeframe == "1D":
-            start_date = last_date - pd.Timedelta(days=1)
-        elif timeframe == "1W":
-            start_date = last_date - pd.Timedelta(weeks=1)
-        elif timeframe == "1M":
-            start_date = last_date - pd.DateOffset(months=1)
-        elif timeframe == "1Y":
-            start_date = last_date - pd.DateOffset(years=1)
-        else:  # "max"
-            return data
-
-        # Filtrer les données
-        filtered_data = data[data['date'] >= start_date]
-        print(f"Nombre de points après filtrage ({timeframe}): {len(filtered_data)}")  # Debug
-        return filtered_data
-
-
-    if request.method == "POST" and request.form.get("ticker"):
-
-
-        selected_ticker = request.form.get("ticker")
-        timeframe = request.form.get("timeframe")
-        user_investment = request.form.get("investment")
-
-        
-
-        try:
-            df = magnificent_data[magnificent_data['ticker'] == selected_ticker].copy()
-            df_filtered = get_filtered_data(df, timeframe)
-            dividends = dividend_data[dividend_data['ticker'] == selected_ticker].copy()
-
-            if not dividends.empty and not df.empty:
-                    df = df.dropna(subset=['close'])
-                    dividends = dividends.dropna(subset=['dividends'])
-                    merged_data = pd.merge(dividends, df, on=['date', 'ticker'], how='inner')
-
-                    if not merged_data.empty:
-                        merged_data['dividend_to_price_ratio'] = merged_data['dividends'] / merged_data['close']
-                        avg_ratio = merged_data['dividend_to_price_ratio'].mean()
-
-                        if user_investment and avg_ratio:
-                            user_investment = float(user_investment)
-                            dividend_yield = user_investment * avg_ratio
-
-            if dividends.empty:
-                return render_template(
-                    "index.html",
-                    tickers=tickers,
-                    # top_5_fr_tickers=top_5_fr_tickers,
-                    # top_5_closing_img_paths=top_5_closing_img_paths,
-                    error_message=f"Le ticker {selected_ticker} ne verse pas de dividendes.",
-                    selected_ticker=selected_ticker,
-                    timeframe=timeframe,
-                )
-
-            dividends = dividends.dropna(subset=['dividends'])
-            df = df.dropna(subset=['close'])
-            merged_data = pd.merge(dividends, df, on=['date', 'ticker'], how='inner')
-
-            if merged_data.empty:
-                return render_template(
-                    "index.html",
-                    tickers=tickers,
-                    #top_5_fr_tickers=top_5_fr_tickers,
-                    #top_5_closing_img_paths=top_5_closing_img_paths,
-                    error_message=f"Aucune donnée commune disponible pour {selected_ticker}.",
-                    selected_ticker=selected_ticker,
-                    timeframe=timeframe,
-                )
-            
-        except Exception as e:
-            return render_template(
-                "index.html",
-                tickers=tickers,
-                #top_5_fr_tickers=top_5_fr_tickers,
-                #top_5_closing_img_paths=top_5_closing_img_paths,
-                error_message=f"Une erreur est survenue : {str(e)}",
-                selected_ticker=selected_ticker,
-                timeframe=timeframe,
-            )
-
-
-
-    return render_template(
-        "global.html",
-        tickers=tickers,
-        selected_ticker = selected_ticker,
-                           
-                           )
-
 
 if __name__ == "__main__":
     app.run(debug=True)
-
