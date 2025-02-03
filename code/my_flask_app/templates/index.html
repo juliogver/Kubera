@@ -1,100 +1,117 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prédictions des Dividendes - Kubera</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prédictions des Dividendes - Kubera</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 
-    <header class="bg-white py-3">
-        <div class="container d-flex align-items-center">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Kubera Logo" style="height: 60px;">
-            <h1 class="ms-3">Kubera - Prédictions des Dividendes</h1>
-            <div class="container d-flex align-items-center">
-        </div>
-
-        </div>
-    </header>
-
-    <div class="container mt-5">
-        <h2 class="text-center">Analyse et Prédiction des Dividendes</h2>
-
-        <!-- Formulaire pour choisir un ticker -->
-        <form method="POST" action="/" class="bg-white p-4 shadow rounded">
-            <div class="mb-3">
-                <label for="ticker" class="form-label">Sélectionnez un ticker :</label>
-                <select name="ticker" id="ticker" class="form-select">
-                    {% for ticker in tickers %}
-                    <option value="{{ ticker }}" {% if ticker == selected_ticker %}selected{% endif %}>
-                        {{ ticker }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Afficher les résultats</button>
-        </form>
-
-        <!-- Graphique interactif des dividendes -->
-        {% if predicted_dividend_div %}
-        <div class="mt-5">
-            <h3 class="text-center">Graphique des Dividendes avec Plage d'Erreur ±8%</h3>
-            {{ predicted_dividend_div | safe }}
-        </div>
-        {% endif %}
-
-        <!-- Graphique interactif des prix historiques -->
-        {% if price_history_div %}
-        <div class="mt-5">
-            <h3 class="text-center">Graphique des Prix de Clôture Historiques</h3>
-            {{ price_history_div | safe }}
-        </div>
-        {% endif %}
-
-        <!-- Section des actualités -->
-        {% if news_articles %}
-        <div class="mt-5">
-            <h3 class="text-center">Actualités pour {{ selected_ticker }}</h3>
-            <ul class="list-group">
-                {% for article in news_articles %}
-                <li class="list-group-item">
-                    <a href="{{ article.url }}" target="_blank" class="text-decoration-none">{{ article.title }}</a>
-                    <br>
-                    <small class="text-muted">Source : {{ article.source.name }}</small>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
+  <header class="bg-white py-3">
+    <div class="container d-flex align-items-center">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Kubera Logo" style="height: 60px;">
+      <h1 class="ms-3">Kubera - Prédictions des Dividendes</h1>
     </div>
+  </header>
 
-     <!-- Footer -->
-    <footer class="bg-dark text-light mt-5 py-4">
-        <div class="container">
-            <h5 class="text-center">À propos de nous</h5>
-            <p class="text-center mt-3">
-                Kubera a été créée pour guider les nouveaux investisseurs dans leurs décisions financières. 
-                Notre équipe est composée de passionnés et experts en finance et technologie :
-            </p>
-            <ul class="list-unstyled text-center">
-                <li>Jules Gravier - CEO</li>
-                <li>Anna Meliz – Data Analyst</li>
-                <li>Arthur Gagniaire - Architecte base de données</li>
-                <li>Enzo Cuoc – Data Analyst</li>
-                <li>Julien de la Harpe - Développeur</li>
-            </ul>
-            <p class="text-center mt-3">
-                Ensemble, nous œuvrons pour démocratiser l'accès à des analyses financières de qualité.
-            </p>
-        </div>
-        <div class="container text-center">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Kubera Logo" style="height: 50px;">
-            <p class="mt-3">© 2025 Kubera. Tous droits réservés.</p>
-        </div>
-    </footer>
+  <div class="container mt-5">
+    <h2 class="text-center">Analyse et Prédiction des Dividendes</h2>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Formulaire pour choisir un ticker et saisir le montant investi -->
+    <form method="POST" action="/" class="bg-white p-4 shadow rounded">
+      <div class="mb-3">
+        <label for="ticker" class="form-label">Sélectionnez un ticker :</label>
+        <select name="ticker" id="ticker" class="form-select">
+          {% for ticker in tickers %}
+          <option value="{{ ticker }}" {% if ticker == selected_ticker %}selected{% endif %}>
+            {{ ticker }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="invested_amount" class="form-label">Montant investi (€) :</label>
+        <input type="number" step="0.01" name="invested_amount" id="invested_amount" class="form-control" placeholder="Ex: 10000" value="{{ invested_amount }}">
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Afficher les résultats</button>
+    </form>
+
+    <!-- Graphique interactif des dividendes -->
+    {% if predicted_dividend_div %}
+    <div class="mt-5">
+      <h3 class="text-center">Graphique des Dividendes avec Plage d'Erreur ±8%</h3>
+      {{ predicted_dividend_div | safe }}
+    </div>
+    {% endif %}
+
+    <!-- Graphique interactif des prix historiques -->
+    {% if price_history_div %}
+    <div class="mt-5">
+      <h3 class="text-center">Graphique des Prix de Clôture Historiques</h3>
+      {{ price_history_div | safe }}
+    </div>
+    {% endif %}
+
+    <!-- Section affichant le rendement en dividende -->
+    {% if dividend_yield is defined %}
+    <div class="mt-5">
+      <h3 class="text-center">Rendement en Dividende sur 3 ans</h3>
+      <div class="card">
+        <div class="card-body">
+          <p><strong>Montant investi :</strong> {{ invested_amount }} €</p>
+          <p><strong>Nombre d'actions achetées :</strong> {{ number_of_shares | round(2) }}</p>
+          <p><strong>Dividende total perçu sur 3 ans :</strong> {{ dividend_received | round(2) }} €</p>
+          <p><strong>Rendement en dividende :</strong> {{ dividend_yield | round(2) }} %</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Section des actualités -->
+    {% if news_articles %}
+    <div class="mt-5">
+      <h3 class="text-center">Actualités pour {{ selected_ticker }}</h3>
+      <ul class="list-group">
+        {% for article in news_articles %}
+        <li class="list-group-item">
+          <a href="{{ article.url }}" target="_blank" class="text-decoration-none">{{ article.title }}</a>
+          <br>
+          <small class="text-muted">Source : {{ article.source.name }}</small>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-light mt-5 py-4">
+    <div class="container">
+      <h5 class="text-center">À propos de nous</h5>
+      <p class="text-center mt-3">
+        Kubera a été créée pour guider les nouveaux investisseurs dans leurs décisions financières. 
+        Notre équipe est composée de passionnés et experts en finance et technologie :
+      </p>
+      <ul class="list-unstyled text-center">
+        <li>Jules Gravier - CEO</li>
+        <li>Anna Meliz – Data Analyst</li>
+        <li>Arthur Gagniaire - Architecte base de données</li>
+        <li>Enzo Cuoc – Data Analyst</li>
+        <li>Julien de la Harpe - Développeur</li>
+      </ul>
+      <p class="text-center mt-3">
+        Ensemble, nous œuvrons pour démocratiser l'accès à des analyses financières de qualité.
+      </p>
+    </div>
+    <div class="container text-center">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Kubera Logo" style="height: 50px;">
+      <p class="mt-3">© 2025 Kubera. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

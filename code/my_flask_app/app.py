@@ -57,9 +57,18 @@ def fetch_news(ticker):
 def home():
     selected_ticker = "AAPL"  # Par défaut
     news_articles = []
+    
+    # Valeur par défaut pour le montant investi (ex. 10 000 €)
+    invested_amount = 10000.0
 
     if request.method == "POST":
         selected_ticker = request.form.get("ticker")
+        # Récupérer le montant investi depuis le formulaire, s'il est fourni
+        invested_amount_str = request.form.get("invested_amount", "10000")
+        try:
+            invested_amount = float(invested_amount_str)
+        except ValueError:
+            invested_amount = 10000.0
 
     # Charger les données de stock pour le ticker sélectionné
     df = get_stock_data(selected_ticker)
@@ -69,9 +78,12 @@ def home():
     df = df[df["Dividends"] > 0]
 
     if df.empty:
-        return render_template("index.html", tickers=magnificent_seven_tickers, selected_ticker=selected_ticker, error_message="Pas de dividendes valides pour ce ticker.")
+        return render_template("index.html", 
+                               tickers=magnificent_seven_tickers, 
+                               selected_ticker=selected_ticker, 
+                               error_message="Pas de dividendes valides pour ce ticker.")
 
-    # Préparer les données pour la régression linéaire
+    # Préparer les données pour la régression linéaire sur les dividendes
     base_date = df['Date'].min()
     date_numeric = (df['Date'] - base_date).dt.days.values.reshape(-1, 1)
 
@@ -79,7 +91,7 @@ def home():
     model_dividends = LinearRegression()
     model_dividends.fit(date_numeric, df['Dividends'])
 
-    # Prédiction des dividendes futurs
+    # Prédiction des dividendes futurs sur 36 mois (3 ans)
     future_dates = pd.date_range(start=df['Date'].max() + pd.DateOffset(days=1), periods=36, freq="M")
     future_dates = future_dates.tz_localize(None)  # Convertir les futures dates en datetime naïf
 
@@ -172,6 +184,20 @@ def home():
         )
     )
 
+    # --- Calcul du rendement en dividende ---
+    # Utiliser le dernier prix connu pour déterminer le nombre d'actions achetées
+    current_price = df['Close'].iloc[-1]
+    number_of_shares = invested_amount / current_price
+
+    # Calcul total des dividendes par action sur 3 ans (somme des 36 prédictions)
+    total_dividend_per_share = sum(predicted_dividends)
+
+    # Dividende total perçu pour le montant investi
+    dividend_received = total_dividend_per_share * number_of_shares
+
+    # Rendement en dividende sur 3 ans (en pourcentage)
+    dividend_yield = (dividend_received / invested_amount) * 100
+
     # Convertir les graphiques en HTML
     predicted_dividend_div = fig_dividends.to_html(full_html=False)
     price_history_div = fig_prices.to_html(full_html=False)
@@ -185,7 +211,11 @@ def home():
         price_history_div=price_history_div,
         selected_ticker=selected_ticker,
         tickers=magnificent_seven_tickers,
-        news_articles=news_articles
+        news_articles=news_articles,
+        invested_amount=invested_amount,
+        number_of_shares=number_of_shares,
+        dividend_received=dividend_received,
+        dividend_yield=dividend_yield
     )
 
 if __name__ == "__main__":
