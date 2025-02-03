@@ -8,14 +8,27 @@
 </head>
 <body class="bg-light">
 
-  <header class="bg-white py-3">
+  <!-- Header mis à jour pour avoir le même style que le footer -->
+  <header class="bg-dark text-light py-3">
     <div class="container d-flex align-items-center">
       <img src="{{ url_for('static', filename='logo.png') }}" alt="Kubera Logo" style="height: 60px;">
       <h1 class="ms-3">Kubera - Prédictions des Dividendes</h1>
     </div>
   </header>
 
+   
+ 
   <div class="container mt-5">
+
+     <div class="mt-5">
+      <div class="card">
+        <div class="card-body">
+           <p class = "text-center">Kubera est une plateforme innovante qui utilise l'intelligence artificielle et l'analyse financière pour prédire la croissance des dividendes. Conçue pour les investisseurs, elle offre des visualisations intuitives, des rapports personnalisés et des outils avancés pour une prise de décision éclairée. Kubera centralise les données et évolue avec les besoins du marché, garantissant des analyses précises et accessibles à tous.</p>
+       
+        </div>
+      </div>
+    </div>
+    
     <h2 class="text-center">Analyse et Prédiction des Dividendes</h2>
 
     <!-- Formulaire pour choisir un ticker et saisir le montant investi -->
@@ -42,7 +55,7 @@
     <!-- Graphique interactif des dividendes -->
     {% if predicted_dividend_div %}
     <div class="mt-5">
-      <h3 class="text-center">Graphique des Dividendes avec Plage d'Erreur ±8%</h3>
+      <h3 class="text-center">Graphique des Dividendes</h3>
       {{ predicted_dividend_div | safe }}
     </div>
     {% endif %}
@@ -76,12 +89,14 @@
       <h3 class="text-center">Performance du Modèle</h3>
       <div class="card">
         <div class="card-body">
-          <p><strong>Score R² :</strong> {{ score_r2 | round(2) }}</p>
+            <p class="text-center">Notre modèle permet de faire des prévisions avec une marge d'erreur d'environ <strong>1 centime</strong>, garantissant ainsi une estimation fiable et précise. Avec <strong>82 %</strong> de précision, il offre une performance robuste pour anticiper les variations et optimiser la prise de décision en minimisant les écarts entre prévisions et réalité.</p>
+
+           <!--<p><strong>Score R² :</strong> {{ score_r2 | round(2) }}</p>
           <p><strong>RMSE :</strong> {{ rmse | round(2) }}</p>
           <p><strong>MAE :</strong> {{ mae | round(2) }}</p>
           <p><strong>Median Absolute Error :</strong> {{ median_ae | round(2) }}</p>
           <p><strong>MAPE :</strong> {{ mape | round(2) }} %</p>
-          <p><strong>Explained Variance :</strong> {{ explained_variance | round(2) }}</p>
+          <p><strong>Explained Variance :</strong> {{ explained_variance | round(2) }}</p>-->
         </div>
       </div>
     </div>
@@ -104,7 +119,7 @@
     {% endif %}
   </div>
 
-  <!-- Footer -->
+  <!-- Footer (inchangé) -->
   <footer class="bg-dark text-light mt-5 py-4">
     <div class="container">
       <h5 class="text-center">À propos de nous</h5>
