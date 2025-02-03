@@ -70,6 +70,23 @@
     </div>
     {% endif %}
 
+    <!-- Section de performance du modèle -->
+    {% if score_r2 is defined and rmse is defined and mae is defined and median_ae is defined and explained_variance is defined and mape is defined %}
+    <div class="mt-5">
+      <h3 class="text-center">Performance du Modèle</h3>
+      <div class="card">
+        <div class="card-body">
+          <p><strong>Score R² :</strong> {{ score_r2 | round(2) }}</p>
+          <p><strong>RMSE :</strong> {{ rmse | round(2) }}</p>
+          <p><strong>MAE :</strong> {{ mae | round(2) }}</p>
+          <p><strong>Median Absolute Error :</strong> {{ median_ae | round(2) }}</p>
+          <p><strong>MAPE :</strong> {{ mape | round(2) }} %</p>
+          <p><strong>Explained Variance :</strong> {{ explained_variance | round(2) }}</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Section des actualités -->
     {% if news_articles %}
     <div class="mt-5">
@@ -92,7 +109,7 @@
     <div class="container">
       <h5 class="text-center">À propos de nous</h5>
       <p class="text-center mt-3">
-        Kubera a été créée pour guider les nouveaux investisseurs dans leurs décisions financières. 
+        Kubera a été créée pour guider les nouveaux investisseurs dans leurs décisions financières.
         Notre équipe est composée de passionnés et experts en finance et technologie :
       </p>
       <ul class="list-unstyled text-center">
