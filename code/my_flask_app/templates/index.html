@@ -83,24 +83,7 @@
     </div>
     {% endif %}
 
-    <!-- Section de performance du modèle -->
-    {% if score_r2 is defined and rmse is defined and mae is defined and median_ae is defined and explained_variance is defined and mape is defined %}
-    <div class="mt-5">
-      <h3 class="text-center">Performance du Modèle</h3>
-      <div class="card">
-        <div class="card-body">
-            <p class="text-center">Notre modèle permet de faire des prévisions avec une marge d'erreur d'environ <strong>1 centime</strong>, garantissant ainsi une estimation fiable et précise. Avec <strong>82 %</strong> de précision, il offre une performance robuste pour anticiper les variations et optimiser la prise de décision en minimisant les écarts entre prévisions et réalité.</p>
-
-           <!--<p><strong>Score R² :</strong> {{ score_r2 | round(2) }}</p>
-          <p><strong>RMSE :</strong> {{ rmse | round(2) }}</p>
-          <p><strong>MAE :</strong> {{ mae | round(2) }}</p>
-          <p><strong>Median Absolute Error :</strong> {{ median_ae | round(2) }}</p>
-          <p><strong>MAPE :</strong> {{ mape | round(2) }} %</p>
-          <p><strong>Explained Variance :</strong> {{ explained_variance | round(2) }}</p>-->
-        </div>
-      </div>
-    </div>
-    {% endif %}
+    
 
     <!-- Section des actualités -->
     {% if news_articles %}
@@ -117,6 +100,32 @@
       </ul>
     </div>
     {% endif %}
+
+    <!-- Section de performance du modèle -->
+    {% if score_r2 is defined and rmse is defined and mae is defined and median_ae is defined and explained_variance is defined and mape is defined %}
+    <div class="mt-5">
+      <h3 class="text-center">Performance du Modèle</h3>
+      <div class="card">
+        <div class="card-body">
+          <p class="text-center">Notre modèle permet de faire des prévisions avec une marge d'erreur d'environ <strong>1 centime</strong>, garantissant ainsi une estimation fiable et précise. Avec <strong>82 %</strong> de précision, il offre une performance robuste pour anticiper les variations et optimiser la prise de décision en minimisant les écarts entre prévisions et réalité.</p>
+
+          <!-- <p><strong>Score R² :</strong> {{ score_r2 | round(2) }}</p> 
+          <p><strong>RMSE :</strong> {{ rmse | round(2) }}</p>
+          <p><strong>MAE :</strong> {{ mae | round(2) }}</p> 
+          <p><strong>Median Absolute Error :</strong> {{ median_ae | round(2) }}</p>
+          <p><strong>MAPE :</strong> {{ mape | round(2) }} %</p>
+          <p><strong>Explained Variance :</strong> {{ explained_variance | round(2) }}</p>
+
+          <p><strong>Score R² :</strong> 0.82</p> 
+          <p><strong>RMSE :</strong> 0.01</p> 
+          <p><strong>Median Absolute Error :</strong> 0.0056</p>-->
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+
+
   </div>
 
   <!-- Footer (inchangé) -->
