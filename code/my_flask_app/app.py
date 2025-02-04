@@ -152,7 +152,19 @@ def home():
     fig_dividends.update_layout(
         title=f"Prédiction des Dividendes - {selected_ticker}",
         xaxis_title="Date",
-        yaxis_title="Dividendes"
+        yaxis_title="Dividendes",
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=[
+                    dict(count=1, label="1M", step="month", stepmode="backward"),
+                    dict(count=6, label="6M", step="month", stepmode="backward"),
+                    dict(count=1, label="1Y", step="year", stepmode="backward"),
+                    dict(step="all")
+                ]
+            ),
+            rangeslider=dict(visible=True),
+            type="date"
+        )
     )
 
     # --- Graphique des Prix Historiques ---
